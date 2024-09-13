@@ -1,6 +1,5 @@
 
 # PathFinder
-***
 
 **PathFinder** is a lightweight Python tool for web directory and file enumeration using multithreading for faster scanning. It is ideal for penetration testing, security assessments, and discovering hidden directories and files.
 
@@ -33,7 +32,6 @@
 ```bash
 python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt --threads 100
 ```
-***
 - This will scan the domain `https://example.com` using the wordlist `common.txt` and 50 threads.
 ***
 **With extensions** (e.g., checking for `.php`, `.html`, and `.js` files):
