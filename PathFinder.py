@@ -45,11 +45,7 @@ popular_dirs = [
     'checkout', 'payment', 'billing', 'invoices', 'orders', 'order-history', 'subscriptions', 'account', 'profile',
     'settings', 'manage', 'upgrade', 'features', 'free-trial', 'demo', 'trial', 'trial-account', 'signup', 'register',
     'join', 'create-account', 'login', 'signin', 'account-login', 'user', 'users', 'admin', 'admin-dashboard',
-    'control-panel', 'cms', 'backend', 'security', 'report', 'blog', 'documentation', 'tutorials', 'videos', 'demos', 
-    'support', 'product', 'legal', 'community', 'subscribe', 'payment', 'upgrade', 'jobs', 'apply', 'team', 'news',
-    'products', 'testimonials', 'customer', 'login', 'signup', 'signin', 'create-account', 'start', 'premium', 
-    'dashboard', 'billing', 'resources', 'testimonials', 'pricing', 'terms-of-service', 'privacy-policy', 'about-us', 
-    'contact-us', 'faqs', 'help', 'services', 'feedback', 'events', 'team', 'our-story', 'mission', 'values', 'our-clients'
+    'control-panel', 'cms', 'backend'
 ]
 
 def download_wordlist(git_url, destination):
@@ -71,7 +67,7 @@ def check_for_false_positive(url, home_page_content):
     except requests.exceptions.RequestException:
         return False
 
-def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, threads=100):
+def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, threads=50):
     # Use a session for connection pooling
     session = requests.Session()
     session.headers.update(headers if headers else {})
@@ -84,7 +80,8 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
     for dir_name in popular_dirs:
         q.put(dir_name)
 
-    # Load wordlist and add remaining paths
+    # Load wordlist, avoiding duplicates and add to the queue after popular_dirs
+    paths = []
     with open(wordlist, 'r') as file:
         for line in file:
             path = line.strip()
@@ -99,8 +96,8 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
 
     total_paths = q.qsize()
 
-    # Improved scanning progress view with a more concise and readable format
-    progress_bar = tqdm(total=total_paths, desc="Scan Progress", ncols=80, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
+    # Improved scanning progress view with more concise and readable format
+    progress_bar = tqdm(total=total_paths, desc="Scan", ncols=70, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
 
     def worker():
         while not q.empty():
@@ -123,8 +120,8 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
             except requests.exceptions.RequestException:
                 progress_bar.update(1)
 
-    # Start fewer worker threads to avoid CPU overhead
-    for _ in range(min(threads, 100)):
+    # Start worker threads
+    for _ in range(threads):
         t = Thread(target=worker)
         t.daemon = True
         t.start()
@@ -156,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("url", help="Target URL (e.g., http://example.com)")
     parser.add_argument("wordlist", help="Path to the wordlist file")
     parser.add_argument("--extensions", "-e", nargs='*', help="File extensions (e.g., php, html, js)")
-    parser.add_argument("--threads", type=int, default=100, help="Number of threads (default: 100 for faster scans)")
+    parser.add_argument("--threads", type=int, default=50, help="Number of threads (default: 50 for faster scans)")
     parser.add_argument("--headers", nargs='*', help="Custom headers 'Key:Value'")
     parser.add_argument("--user-agent", help="Custom User-Agent string")
 
