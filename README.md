@@ -2,7 +2,7 @@
 
 **PathFinder** is a lightweight Python tool for web directory and file enumeration using multithreading for faster scanning. It is ideal for penetration testing, security assessments, and discovering hidden directories and files.
 
-### Requirements:
+### Requirements
 - Python 3.7 or higher
 
 ### Installation 
