@@ -68,9 +68,9 @@ The default wordlist comes from **DirBuster**, typically found on Kali Linux und
 
 ## Licensing
 
-[MIT license](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT_License-blue)](https://opensource.org/licenses/MIT)
 
-<sup>NOTE: Downloading this repository may trigger a false-positive alert from your anti-virus or anti-malware software. You can whitelist the filepath if necessary. This repository is safe to use and can be used free of charge. However, it is not recommended to store these files on critical systems, as they could pose a risk of local file inclusion attacks if improperly handled.</sup>
+NOTE: Downloading this repository may trigger a false-positive alert from your anti-virus or anti-malware software. You can whitelist the filepath if necessary. This repository is safe to use and can be used free of charge. However, it is not recommended to store these files on critical systems, as they could pose a risk of local file inclusion attacks if improperly handled.
 
 
 
