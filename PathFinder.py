@@ -15,7 +15,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 init(autoreset=True)
 
 print_lock = Lock()
-found_endpoints = set()  # Store only 200 OK found endpoints
+found_endpoints_200 = set()  # Store only 200 OK found endpoints
+found_endpoints_403 = set()  # Store only 403 Forbidden found endpoints
 
 # Full list of common/popular directories (200 entries)
 popular_dirs = [
@@ -120,12 +121,14 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                 if status_code == 200:
                     if check_for_false_positive(full_url, home_page_content):
                         with print_lock:
-                            if full_url not in found_endpoints:
-                                found_endpoints.add(full_url)
+                            if full_url not in found_endpoints_200:
+                                found_endpoints_200.add(full_url)
                                 print(f"{Fore.GREEN}[200 OK] Found: {full_url}{Style.RESET_ALL}")
                 elif status_code == 403:
                     with print_lock:
-                        print(f"{Fore.RED}[403 Forbidden] {full_url}")
+                        if full_url not in found_endpoints_403:
+                            found_endpoints_403.add(full_url)
+                            print(f"{Fore.RED}[403 Forbidden] {full_url}")
                 progress_bar.update(1)
                 q.task_done()
             except requests.exceptions.RequestException:
@@ -143,13 +146,19 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
     show_summary()
 
 def show_summary():
-    """ Show only the endpoints that returned 200 OK in the summary """
-    print(f"\n{Fore.GREEN}Summary of 200 OK Endpoints:{Style.RESET_ALL}")
-    if found_endpoints:
-        for endpoint in found_endpoints:
-            print(f"{Fore.GREEN}[+] {endpoint}{Style.RESET_ALL}")
+    """ Show the endpoints that returned 200 OK and 403 Forbidden in the summary """
+    print(f"\n{Fore.GREEN}Summary of Found Endpoints:{Style.RESET_ALL}")
+    if found_endpoints_200 or found_endpoints_403:
+        if found_endpoints_200:
+            print(f"\n{Fore.GREEN}200 OK Endpoints:{Style.RESET_ALL}")
+            for endpoint in found_endpoints_200:
+                print(f"{Fore.GREEN}[+] {endpoint}{Style.RESET_ALL}")
+        if found_endpoints_403:
+            print(f"\n{Fore.RED}403 Forbidden Endpoints:{Style.RESET_ALL}")
+            for endpoint in found_endpoints_403:
+                print(f"{Fore.RED}[403] {endpoint}{Style.RESET_ALL}")
     else:
-        print(f"{Fore.RED}[!] No 200 OK endpoints found.{Style.RESET_ALL}")
+        print(f"{Fore.RED}[!] No valid endpoints (200 OK or 403 Forbidden) found.{Style.RESET_ALL}")
 
 def signal_handler(sig, frame):
     """ Handle Ctrl+C to show summary before exit """
