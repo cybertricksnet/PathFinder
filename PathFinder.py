@@ -7,13 +7,17 @@ import os
 from colorama import Fore, Style, init
 import signal
 import sys
+import urllib3
 
-init(autoreset=True)  # Automatically reset colors after each print
+# Suppress warnings for unverified HTTPS requests
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+init(autoreset=True)
 
 print_lock = Lock()
-found_endpoints = []  # List to store found endpoints
+found_endpoints = set()  # Store found endpoints in a set to avoid duplicates
 
-# Popular directory names
+# Check this before wordlist
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -49,24 +53,18 @@ def download_wordlist(git_url, destination):
     if response.status_code == 200:
         with open(destination, 'wb') as file:
             file.write(response.content)
-        print(f"[+] Wordlist downloaded from {git_url} and saved to {destination}")
         return destination
     else:
-        print(f"[!] Failed to download wordlist from {git_url}")
         return None
 
 def check_for_false_positive(url, home_page_content):
     try:
         response = requests.get(url, verify=False)
         if response.status_code == 200:
-            # Compare content length with the homepage to check for false positives
-            if len(response.content) == len(home_page_content):
-                return False  # Likely a false positive if the content length matches
-            else:
-                return True
+            return len(response.content) != len(home_page_content)
         else:
             return False
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         return False
 
 def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, threads=10):
@@ -75,23 +73,14 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
     if user_agent:
         headers['User-Agent'] = user_agent
 
-    # Get homepage content length for false positive detection
+    # Get homepage content to detect false positives
     try:
         home_page_response = requests.get(url, headers=headers, verify=False)
         home_page_content = home_page_response.content
-    except requests.exceptions.RequestException as e:
-        print(f"[!] Error: Could not get homepage of {url}: {e}")
+    except requests.exceptions.RequestException:
         return
 
-    # Check if the wordlist exists locally; if not, try to download
-    if not os.path.exists(wordlist):
-        git_url = "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt"
-        print(f"[!] Wordlist not found locally. Attempting to download from {git_url}")
-        wordlist = download_wordlist(git_url, 'common.txt')
-        if not wordlist:
-            return
-
-    # Read the wordlist and remove duplicates with popular directories
+    # Load wordlist, avoiding duplicates
     paths = []
     with open(wordlist, 'r') as file:
         for line in file:
@@ -99,23 +88,22 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
             if extensions:
                 for ext in extensions:
                     full_path = f"{path}.{ext}"
-                    if full_path not in popular_dirs:  # Prevent duplicates
+                    if full_path not in popular_dirs:
                         paths.append(full_path)
             else:
-                if path not in popular_dirs:  # Prevent duplicates
+                if path not in popular_dirs:
                     paths.append(path)
 
-    # Add common directories to the queue first
+    # Add popular directories first
     for dir_name in popular_dirs:
         q.put(dir_name)
 
-    # Add remaining paths from the wordlist
+    # Add remaining paths
     for path in paths:
         q.put(path)
 
-    total_paths = len(popular_dirs) + len(paths)  # Total number of paths to scan
+    total_paths = len(popular_dirs) + len(paths)
 
-    # Create a progress bar using tqdm
     progress_bar = tqdm(total=total_paths, desc="Scanning Progress", ncols=100)
 
     def worker():
@@ -124,38 +112,42 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
             full_url = f"{url}/{path}"
             try:
                 response = requests.get(full_url, headers=headers, verify=False)
-                if response.status_code == 200:
+                status_code = response.status_code
+                if status_code == 200:
                     if check_for_false_positive(full_url, home_page_content):
                         with print_lock:
-                            print(f"{Fore.GREEN}[+] Found: {full_url} (Status: 200){Style.RESET_ALL}")
-                        found_endpoints.append(full_url)  # Add to found list
+                            if full_url not in found_endpoints:
+                                found_endpoints.add(full_url)
+                                print(f"{Fore.GREEN}[200 OK] Found: {full_url}{Style.RESET_ALL}")
                     else:
                         with print_lock:
-                            print(f"{Fore.YELLOW}[!] False Positive: {full_url} (Status: 200 but matches homepage content)")
-                elif response.status_code == 403:
+                            print(f"{Fore.YELLOW}[200 OK] False Positive: {full_url}")
+                elif status_code == 403:
                     with print_lock:
-                        print(f"[-] Forbidden: {full_url} (Status: 403)")
-                progress_bar.update(1)  # Update the progress bar
+                        print(f"{Fore.RED}[403 Forbidden] {full_url}")
+                elif status_code == 404:
+                    with print_lock:
+                        print(f"[404 Not Found] {full_url}")
+                progress_bar.update(1)
                 q.task_done()
             except requests.exceptions.RequestException as e:
                 with print_lock:
                     print(f"[!] Error: {full_url} - {e}")
-                progress_bar.update(1)  # Update the progress bar
+                progress_bar.update(1)
 
-    # Start the threads
+    # Start worker threads
     for _ in range(threads):
         t = Thread(target=worker)
         t.daemon = True
         t.start()
 
     q.join()
-    progress_bar.close()  # Close the progress bar once the scanning is done
+    progress_bar.close()
 
-    # Print the summary
     show_summary()
 
 def show_summary():
-    """ Display a summary of found endpoints in green """
+    """ Show found endpoints in green """
     print(f"\n{Fore.GREEN}Summary of Found Endpoints:{Style.RESET_ALL}")
     if found_endpoints:
         for endpoint in found_endpoints:
@@ -166,19 +158,18 @@ def show_summary():
 def signal_handler(sig, frame):
     """ Handle Ctrl+C to show summary before exit """
     print("\n\n[!] Scan interrupted by user.")
-    show_summary()  # Show the summary of found endpoints
+    show_summary()
     sys.exit(0)
 
 if __name__ == "__main__":
-    # Catch Ctrl+C interrupt
     signal.signal(signal.SIGINT, signal_handler)
 
-    parser = argparse.ArgumentParser(description="Web Directory and File Enumerator with Extension Support")
+    parser = argparse.ArgumentParser(description="Web Directory and File Enumerator")
     parser.add_argument("url", help="Target URL (e.g., http://example.com)")
-    parser.add_argument("wordlist", help="Path to the wordlist file or download from GitHub if not found")
-    parser.add_argument("--extensions", "-e", nargs='*', help="File extensions to append (e.g., php, html, js)")
+    parser.add_argument("wordlist", help="Path to the wordlist file")
+    parser.add_argument("--extensions", "-e", nargs='*', help="File extensions (e.g., php, html, js)")
     parser.add_argument("--threads", type=int, default=10, help="Number of threads (default: 10)")
-    parser.add_argument("--headers", nargs='*', help="Custom headers in 'Key:Value' format")
+    parser.add_argument("--headers", nargs='*', help="Custom headers 'Key:Value'")
     parser.add_argument("--user-agent", help="Custom User-Agent string")
 
     args = parser.parse_args()
