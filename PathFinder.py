@@ -3,22 +3,19 @@ import argparse
 from threading import Thread, Lock
 import queue
 from tqdm import tqdm
-import os
 from colorama import Fore, Style, init
 import signal
 import sys
 import urllib3
 
-# Suppress warnings for unverified HTTPS requests
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 init(autoreset=True)
 
 print_lock = Lock()
-found_endpoints_200 = set()  # Store only 200 OK found endpoints
-found_endpoints_403 = set()  # Store only 403 Forbidden found endpoints
+found_endpoints_200 = set()
+found_endpoints_403 = set()
 
-# Check common directories first before wordlist (200 entries)
+# Initial check for common dir before checking wordlist
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -41,22 +38,8 @@ popular_dirs = [
     'conferences', 'press', 'media', 'announcements', 'newsletter', 'subscribe', 'unsubscribe', 'privacy-policy',
     'terms-of-use', 'terms-and-conditions', 'site-map', 'sitemap', 'legal', 'disclaimer', 'disclosures', 'cookie-policy',
     'terms', 'resources', 'support', 'documentation', 'guides', 'tutorials', 'api-docs', 'dev', 'developers', 'integrations',
-    'addons', 'extensions', 'plugins', 'theme', 'themes', 'templates', 'store', 'shop', 'products', 'solutions',
-    'industries', 'ecommerce', 'product', 'solutions', 'pricing', 'plans', 'subscription', 'billing', 'payments',
-    'checkout', 'payment', 'billing', 'invoices', 'orders', 'order-history', 'subscriptions', 'account', 'profile',
-    'settings', 'manage', 'upgrade', 'features', 'free-trial', 'demo', 'trial', 'trial-account', 'signup', 'register',
-    'join', 'create-account', 'login', 'signin', 'account-login', 'user', 'users', 'admin', 'admin-dashboard',
-    'control-panel', 'cms', 'backend'
+    'addons', 'extensions', 'plugins', 'theme', 'themes', 'templates', 'store', 'shop', 'products', 'solutions'
 ]
-
-def download_wordlist(git_url, destination):
-    response = requests.get(git_url)
-    if response.status_code == 200:
-        with open(destination, 'wb') as file:
-            file.write(response.content)
-        return destination
-    else:
-        return None
 
 def check_for_false_positive(url, home_page_content):
     try:
@@ -69,7 +52,6 @@ def check_for_false_positive(url, home_page_content):
         return False
 
 def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, threads=50):
-    # Use a session for connection pooling
     session = requests.Session()
     session.headers.update(headers if headers else {})
     if user_agent:
@@ -77,14 +59,12 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
 
     q = queue.Queue()
 
-    # Get homepage content to detect false positives
     try:
         home_page_response = session.get(url, verify=False, timeout=3)
         home_page_content = home_page_response.content
     except requests.exceptions.RequestException:
         return
 
-    # Load wordlist, avoiding duplicates
     paths = []
     with open(wordlist, 'r') as file:
         for line in file:
@@ -98,17 +78,13 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                 if path not in popular_dirs:
                     paths.append(path)
 
-    # Add popular directories first
     for dir_name in popular_dirs:
         q.put(dir_name)
 
-    # Add remaining paths
     for path in paths:
         q.put(path)
 
     total_paths = len(popular_dirs) + len(paths)
-
-    # Improved scanning progress view with more concise and readable format
     progress_bar = tqdm(total=total_paths, desc="Scan", ncols=70, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
 
     def worker():
@@ -134,19 +110,17 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
             except requests.exceptions.RequestException:
                 progress_bar.update(1)
 
-    # Start worker threads
     for _ in range(threads):
         t = Thread(target=worker)
         t.daemon = True
         t.start()
 
-    q.join()  # Wait for all tasks in the queue to be processed
+    q.join()
     progress_bar.close()
 
-    show_summary()  # Show the summary after the scan completes
+    show_summary()
 
 def show_summary():
-    """ Show the endpoints that returned 200 OK and 403 Forbidden in the summary """
     print(f"\n{Fore.GREEN}Summary of Found Endpoints:{Style.RESET_ALL}")
     if found_endpoints_200 or found_endpoints_403:
         if found_endpoints_200:
@@ -161,7 +135,6 @@ def show_summary():
         print(f"{Fore.RED}[!] No valid endpoints (200 OK or 403 Forbidden) found.{Style.RESET_ALL}")
 
 def signal_handler(sig, frame):
-    """ Handle Ctrl+C to show summary before exit """
     print("\n\n[!] Scan interrupted by user.")
     show_summary()
     sys.exit(0)
