@@ -17,7 +17,7 @@ init(autoreset=True)
 print_lock = Lock()
 found_endpoints = set()  # Store found endpoints in a set to avoid duplicates
 
-# List of common/popular directories
+# Full list of common/popular directories (200 entries)
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -121,6 +121,12 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                             if full_url not in found_endpoints:
                                 found_endpoints.add(full_url)
                                 print(f"{Fore.GREEN}[200 OK] Found: {full_url}{Style.RESET_ALL}")
+                elif status_code == 403:
+                    with print_lock:
+                        print(f"{Fore.RED}[403 Forbidden] {full_url}")
+                elif status_code == 404:
+                    with print_lock:
+                        print(f"[404 Not Found] {full_url}")
                 progress_bar.update(1)
                 q.task_done()
             except requests.exceptions.RequestException:
@@ -135,7 +141,6 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
     q.join()
     progress_bar.close()
 
-    # Show summary after the scan completes
     show_summary()
 
 def show_summary():
