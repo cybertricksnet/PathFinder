@@ -15,7 +15,6 @@ print_lock = Lock()
 found_endpoints_200 = set()
 found_endpoints_403 = set()
 
-# Initial check for common dir before checking wordlist
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -110,14 +109,19 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
             except requests.exceptions.RequestException:
                 progress_bar.update(1)
 
+    threads_list = []
     for _ in range(threads):
         t = Thread(target=worker)
         t.daemon = True
         t.start()
+        threads_list.append(t)
 
     q.join()
-    progress_bar.close()
 
+    for t in threads_list:
+        t.join()
+
+    progress_bar.close()
     show_summary()
 
 def show_summary():
