@@ -68,5 +68,5 @@ The default wordlist comes from **DirBuster**, typically found on Kali Linux und
 
 ## Licensing
 
-- This project is licensed under [![MIT License](https://img.shields.io/badge/license-MIT_License-blue)](https://opensource.org/licenses/MIT)
+- This project is licensed under <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT_License-blue" alt="MIT License" style="vertical-align: middle;"></a>
 
