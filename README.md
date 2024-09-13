@@ -61,7 +61,7 @@ The default wordlist comes from **DirBuster**, typically found on Kali Linux und
 - **Supports file extensions**: You can check for specific file extensions like `.php`, `.html`, and `.js`.
 - **Custom headers and user agents**: Add headers and user-agent strings for advanced use cases.
 
-### Notes
+## Notes
 
 - You can adjust the number of threads depending on your machine's resources.
 - Larger wordlists may take more time but can discover more hidden files and directories.
