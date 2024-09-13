@@ -15,7 +15,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 init(autoreset=True)
 
 print_lock = Lock()
-found_endpoints = set()  # Store found endpoints in a set to avoid duplicates
+found_endpoints = set()  # Store only 200 OK found endpoints
 
 # Full list of common/popular directories (200 entries)
 popular_dirs = [
@@ -106,7 +106,9 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
         q.put(path)
 
     total_paths = len(popular_dirs) + len(paths)
-    progress_bar = tqdm(total=total_paths, desc="Scanning Progress", ncols=100)
+
+    # Improved scanning progress view with more concise and readable format
+    progress_bar = tqdm(total=total_paths, desc="Scan", ncols=70, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
 
     def worker():
         while not q.empty():
@@ -124,9 +126,6 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                 elif status_code == 403:
                     with print_lock:
                         print(f"{Fore.RED}[403 Forbidden] {full_url}")
-                elif status_code == 404:
-                    with print_lock:
-                        print(f"[404 Not Found] {full_url}")
                 progress_bar.update(1)
                 q.task_done()
             except requests.exceptions.RequestException:
