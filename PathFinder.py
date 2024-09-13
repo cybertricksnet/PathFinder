@@ -13,6 +13,13 @@ init(autoreset=True)  # Automatically reset colors after each print
 print_lock = Lock()
 found_endpoints = []  # List to store found endpoints
 
+# Define common/popular directory names
+popular_dirs = [
+    'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
+    'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup',
+    # ... (the rest of the list from above)
+]
+
 def download_wordlist(git_url, destination):
     response = requests.get(git_url)
     if response.status_code == 200:
@@ -60,22 +67,29 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
         if not wordlist:
             return
 
-    # Read the wordlist and count the total number of paths
+    # Read the wordlist and remove duplicates with popular directories
     paths = []
     with open(wordlist, 'r') as file:
         for line in file:
             path = line.strip()
             if extensions:
                 for ext in extensions:
-                    paths.append(f"{path}.{ext}")
+                    full_path = f"{path}.{ext}"
+                    if full_path not in popular_dirs:  # Prevent duplicates
+                        paths.append(full_path)
             else:
-                paths.append(path)
+                if path not in popular_dirs:  # Prevent duplicates
+                    paths.append(path)
 
-    total_paths = len(paths)  # Total number of paths to scan
+    # Add common directories to the queue first
+    for dir_name in popular_dirs:
+        q.put(dir_name)
 
-    # Add all paths to the queue
+    # Add remaining paths from the wordlist
     for path in paths:
         q.put(path)
+
+    total_paths = len(popular_dirs) + len(paths)  # Total number of paths to scan
 
     # Create a progress bar using tqdm
     progress_bar = tqdm(total=total_paths, desc="Scanning Progress", ncols=100)
