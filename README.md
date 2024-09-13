@@ -30,14 +30,14 @@
 
 **Basic scan**:
 ```bash
-python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt --threads 50
+python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt --threads 100
 ```
 
 - This will scan the domain `https://example.com` using the wordlist `common.txt` and 50 threads.
 
 **With extensions** (e.g., checking for `.php`, `.html`, and `.js` files):
 ```bash
-python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt -e php html js --threads 50
+python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt -e php html js --threads 100
 ```
 
 - This will attempt to find directories or files with `.php`, `.html`, and `.js` extensions.
@@ -52,7 +52,7 @@ To conduct a more thorough scan with a bigger wordlist, you can use the SecLists
 
 - Use the larger wordlist for scanning:
    ```bash
-   python3 PathFinder.py https://example.com /path/to/SecLists/Discovery/Web-Content/big.txt --threads 50
+   python3 PathFinder.py https://example.com /path/to/SecLists/Discovery/Web-Content/big.txt --threads 100
    ```
 
 This will use a larger wordlist (`big.txt`) from SecLists for a more comprehensive scan.
