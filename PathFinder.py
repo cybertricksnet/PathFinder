@@ -121,9 +121,6 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                             if full_url not in found_endpoints:
                                 found_endpoints.add(full_url)
                                 print(f"{Fore.GREEN}[200 OK] Found: {full_url}{Style.RESET_ALL}")
-                    else:
-                        with print_lock:
-                            print(f"{Fore.YELLOW}[200 OK] False Positive: {full_url}")
                 elif status_code == 403:
                     with print_lock:
                         print(f"{Fore.RED}[403 Forbidden] {full_url}")
@@ -147,13 +144,13 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
     show_summary()
 
 def show_summary():
-    """ Show found endpoints in green """
-    print(f"\n{Fore.GREEN}Summary of Found Endpoints:{Style.RESET_ALL}")
+    """ Show only the endpoints that returned 200 OK in the summary """
+    print(f"\n{Fore.GREEN}Summary of 200 OK Endpoints:{Style.RESET_ALL}")
     if found_endpoints:
         for endpoint in found_endpoints:
             print(f"{Fore.GREEN}[+] {endpoint}{Style.RESET_ALL}")
     else:
-        print(f"{Fore.RED}[!] No endpoints found.{Style.RESET_ALL}")
+        print(f"{Fore.RED}[!] No 200 OK endpoints found.{Style.RESET_ALL}")
 
 def signal_handler(sig, frame):
     """ Handle Ctrl+C to show summary before exit """
