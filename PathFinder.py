@@ -144,8 +144,8 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
 
 def show_summary():
     """ Show only the endpoints that returned 200 OK in the summary """
-    print(f"\n{Fore.GREEN}Summary of 200 OK Endpoints:{Style.RESET_ALL}")
     if found_endpoints:
+        print(f"\n{Fore.GREEN}Summary of 200 OK Endpoints:{Style.RESET_ALL}")
         for endpoint in found_endpoints:
             print(f"{Fore.GREEN}[+] {endpoint}{Style.RESET_ALL}")
     else:
