@@ -65,3 +65,8 @@ The default wordlist comes from **DirBuster**, typically found on Kali Linux und
 
 - You can adjust the number of threads depending on your machine's resources.
 - Larger wordlists may take more time but can discover more hidden files and directories.
+
+## Licensing
+
+- This project is licensed under [![MIT License](https://img.shields.io/badge/license-MIT_License-blue)](https://opensource.org/licenses/MIT)
+
