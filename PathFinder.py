@@ -18,7 +18,7 @@ print_lock = Lock()
 found_endpoints_200 = set()  # Store only 200 OK found endpoints
 found_endpoints_403 = set()  # Store only 403 Forbidden found endpoints
 
-# Full list of common/popular directories (200 entries)
+# Check common directories first before wordlist (200 entries)
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -140,10 +140,10 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
         t.daemon = True
         t.start()
 
-    q.join()
+    q.join()  # Wait for all tasks in the queue to be processed
     progress_bar.close()
 
-    show_summary()
+    show_summary()  # Show the summary after the scan completes
 
 def show_summary():
     """ Show the endpoints that returned 200 OK and 403 Forbidden in the summary """
