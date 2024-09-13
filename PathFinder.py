@@ -76,14 +76,11 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
 
     q = queue.Queue()
 
-    # Get homepage content to detect false positives
-    try:
-        home_page_response = session.get(url, verify=False, timeout=3)
-        home_page_content = home_page_response.content
-    except requests.exceptions.RequestException:
-        return
+    # Add popular directories to queue first
+    for dir_name in popular_dirs:
+        q.put(dir_name)
 
-    # Load wordlist, avoiding duplicates
+    # Load wordlist, avoiding duplicates and add to the queue after popular_dirs
     paths = []
     with open(wordlist, 'r') as file:
         for line in file:
@@ -92,20 +89,12 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                 for ext in extensions:
                     full_path = f"{path}.{ext}"
                     if full_path not in popular_dirs:
-                        paths.append(full_path)
+                        q.put(full_path)
             else:
                 if path not in popular_dirs:
-                    paths.append(path)
+                    q.put(path)
 
-    # Add popular directories first
-    for dir_name in popular_dirs:
-        q.put(dir_name)
-
-    # Add remaining paths
-    for path in paths:
-        q.put(path)
-
-    total_paths = len(popular_dirs) + len(paths)
+    total_paths = q.qsize()
 
     # Improved scanning progress view with more concise and readable format
     progress_bar = tqdm(total=total_paths, desc="Scan", ncols=70, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
