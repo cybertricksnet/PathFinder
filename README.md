@@ -42,6 +42,11 @@ python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt -
 
 - This will attempt to find directories or files with `.php`, `.html`, and `.js` extensions.
 
+**Example with Custom Headers & User-Agent:
+```bash
+python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt --headers "Authorization: Bearer token" --user-agent "Mozilla/5.0" --threads 100
+```
+
 **Using a larger wordlist**:
 To conduct a more thorough scan with a bigger wordlist, you can use the SecLists repository. Here's how:
 
