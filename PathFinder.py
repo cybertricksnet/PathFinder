@@ -13,11 +13,35 @@ init(autoreset=True)  # Automatically reset colors after each print
 print_lock = Lock()
 found_endpoints = []  # List to store found endpoints
 
-# Define common/popular directory names
+# Popular directory names
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
-    'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup',
-    # ... (the rest of the list from above)
+    'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
+    'signin', 'subscribe', 'unsubscribe', 'profile', 'settings', 'feedback', 'news', 'events', 'press', 'media',
+    'partners', 'team', 'portfolio', 'projects', 'solutions', 'clients', 'reviews', 'testimonials', 'gallery',
+    'videos', 'downloads', 'pricing', 'plans', 'features', 'offers', 'discounts', 'promotions', 'coupons', 'deals',
+    'specials', 'store', 'shop', 'cart', 'checkout', 'orders', 'billing', 'payment', 'shipping', 'track', 'tracking',
+    'wishlist', 'terms-of-service', 'privacy-policy', 'legal', 'disclaimer', 'cookies', 'cookie-policy', 'security',
+    'sitemap', 'resources', 'documentation', 'docs', 'api', 'developers', 'partners', 'affiliates', 'referrals',
+    'community', 'forum', 'forums', 'discussion', 'chat', 'contact-us', 'get-in-touch', 'social', 'social-media',
+    'follow', 'subscribe-us', 'unsubscribe', 'status', 'outage', 'maintenance', 'upgrade', 'terms-conditions',
+    'terms-of-use', 'how-it-works', 'our-team', 'meet-the-team', 'leadership', 'staff', 'board', 'management',
+    'founders', 'our-history', 'history', 'mission', 'values', 'vision', 'our-work', 'what-we-do', 'company',
+    'corporate', 'business', 'solutions', 'industries', 'verticals', 'team', 'why-us', 'our-story', 'who-we-are',
+    'about-us', 'contact-us', 'get-started', 'start-here', 'how-it-works', 'our-process', 'our-clients',
+    'customer-stories', 'success-stories', 'case-studies', 'testimonials', 'reviews', 'faqs', 'help-center',
+    'support-center', 'knowledge-base', 'support', 'live-chat', 'contact-form', 'careers', 'work-with-us', 'jobs',
+    'job-openings', 'opportunities', 'apply', 'hiring', 'internships', 'volunteer', 'join-us', 'get-involved',
+    'donate', 'contribute', 'fundraise', 'sponsor', 'media-center', 'press-releases', 'news', 'events', 'webinars',
+    'conferences', 'press', 'media', 'announcements', 'newsletter', 'subscribe', 'unsubscribe', 'privacy-policy',
+    'terms-of-use', 'terms-and-conditions', 'site-map', 'sitemap', 'legal', 'disclaimer', 'disclosures', 'cookie-policy',
+    'terms', 'resources', 'support', 'documentation', 'guides', 'tutorials', 'api-docs', 'dev', 'developers', 'integrations',
+    'addons', 'extensions', 'plugins', 'theme', 'themes', 'templates', 'store', 'shop', 'products', 'solutions',
+    'industries', 'ecommerce', 'product', 'solutions', 'pricing', 'plans', 'subscription', 'billing', 'payments',
+    'checkout', 'payment', 'billing', 'invoices', 'orders', 'order-history', 'subscriptions', 'account', 'profile',
+    'settings', 'manage', 'upgrade', 'features', 'free-trial', 'demo', 'trial', 'trial-account', 'signup', 'register',
+    'join', 'create-account', 'login', 'signin', 'account-login', 'user', 'users', 'admin', 'admin-dashboard',
+    'control-panel', 'cms', 'backend'
 ]
 
 def download_wordlist(git_url, destination):
