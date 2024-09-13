@@ -12,7 +12,7 @@
 
 - **Clone the repository using Git**:
    ```bash
-   git clone https://github.com/cybertricksnet/PathFinder.git --depth 1
+   git clone https://github.com/cybertricksnet/PathFinder.git
    ```
 
 - **Navigate to the directory**:
@@ -61,7 +61,7 @@ This will use a larger wordlist (`big.txt`) from SecLists for a more comprehensi
 
 The default wordlist used in examples comes from the **DirBuster** wordlist collection, commonly available on Kali Linux systems under `/usr/share/wordlists/dirb/`.
 
-For more extensive scans, we recommend using wordlists from the **SecLists** repository, which contains various discovery wordlists for web content:
+For more extensive scans, use wordlists from the **SecLists** repository, which contains various discovery wordlists for web content:
 - **SecLists** repository: [https://github.com/danielmiessler/SecLists](https://github.com/danielmiessler/SecLists)
 
 ### Key Features
