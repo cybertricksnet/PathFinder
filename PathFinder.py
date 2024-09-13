@@ -17,7 +17,7 @@ init(autoreset=True)
 print_lock = Lock()
 found_endpoints = set()  # Store found endpoints in a set to avoid duplicates
 
-# Check this before wordlist
+# List of common/popular directories
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -59,7 +59,7 @@ def download_wordlist(git_url, destination):
 
 def check_for_false_positive(url, home_page_content):
     try:
-        response = requests.get(url, verify=False)
+        response = requests.get(url, verify=False, timeout=3)
         if response.status_code == 200:
             return len(response.content) != len(home_page_content)
         else:
@@ -67,15 +67,18 @@ def check_for_false_positive(url, home_page_content):
     except requests.exceptions.RequestException:
         return False
 
-def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, threads=10):
-    q = queue.Queue()
-    headers = headers if headers else {}
+def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, threads=50):
+    # Use a session for connection pooling
+    session = requests.Session()
+    session.headers.update(headers if headers else {})
     if user_agent:
-        headers['User-Agent'] = user_agent
+        session.headers['User-Agent'] = user_agent
+
+    q = queue.Queue()
 
     # Get homepage content to detect false positives
     try:
-        home_page_response = requests.get(url, headers=headers, verify=False)
+        home_page_response = session.get(url, verify=False, timeout=3)
         home_page_content = home_page_response.content
     except requests.exceptions.RequestException:
         return
@@ -103,7 +106,6 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
         q.put(path)
 
     total_paths = len(popular_dirs) + len(paths)
-
     progress_bar = tqdm(total=total_paths, desc="Scanning Progress", ncols=100)
 
     def worker():
@@ -111,7 +113,7 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
             path = q.get()
             full_url = f"{url}/{path}"
             try:
-                response = requests.get(full_url, headers=headers, verify=False)
+                response = session.get(full_url, verify=False, timeout=3)
                 status_code = response.status_code
                 if status_code == 200:
                     if check_for_false_positive(full_url, home_page_content):
@@ -130,9 +132,7 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
                         print(f"[404 Not Found] {full_url}")
                 progress_bar.update(1)
                 q.task_done()
-            except requests.exceptions.RequestException as e:
-                with print_lock:
-                    print(f"[!] Error: {full_url} - {e}")
+            except requests.exceptions.RequestException:
                 progress_bar.update(1)
 
     # Start worker threads
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     parser.add_argument("url", help="Target URL (e.g., http://example.com)")
     parser.add_argument("wordlist", help="Path to the wordlist file")
     parser.add_argument("--extensions", "-e", nargs='*', help="File extensions (e.g., php, html, js)")
-    parser.add_argument("--threads", type=int, default=10, help="Number of threads (default: 10)")
+    parser.add_argument("--threads", type=int, default=50, help="Number of threads (default: 50 for faster scans)")
     parser.add_argument("--headers", nargs='*', help="Custom headers 'Key:Value'")
     parser.add_argument("--user-agent", help="Custom User-Agent string")
 
