@@ -1,76 +1,67 @@
-## PathFinder
 
-**PathFinder** is a lightweight Python tool for web directory and file enumeration using multithreading for faster scanning. It is ideal for penetration testing, security assessments, and discovering hidden directories and files.
+# PathFinder
 
-### Requirements
+**PathFinder** is a Python tool for discovering hidden directories and files on web servers. It uses multithreading for faster scanning, making it useful for penetration testing and security assessments.
+
+## Requirements
 - Python 3.7 or higher
 
-### Installation 
+## Installation
 
-- **Clone the repository using Git**:
+- **Clone this repository**:
    ```bash
    git clone https://github.com/cybertricksnet/PathFinder.git
    ```
 
-- **Navigate to the directory**:
+- **Change to the directory**:
    ```bash
    cd PathFinder
    ```
 
-- **Install dependencies (if necessary)**:
-   Install the required Python modules by running:
+- **Install necessary libraries**:
+   Install any missing Python libraries by running:
    ```bash
    pip install -r requirements.txt
    ```
 
-### Example Usage
+## Usage
 
-**Basic scan**:
+### **Basic scan**:
 ```bash
 python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt --threads 100
 ```
-- This will scan the domain `https://example.com` using the wordlist `common.txt` and 50 threads.
-***
-**With extensions** (e.g., checking for `.php`, `.html`, and `.js` files):
+This will scan the domain `https://example.com` using the wordlist `common.txt` and 100 threads.
+
+### **With file extensions** (e.g., `.php`, `.html`, `.js`):
 ```bash
 python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt -e php html js --threads 100
 ```
+This will attempt to find directories or files with `.php`, `.html`, and `.js` extensions.
 
-- This will attempt to find directories or files with `.php`, `.html`, and `.js` extensions.
-***
-**Example with Custom Headers & User-Agent**:
-```bash
-python3 PathFinder.py https://example.com /usr/share/wordlists/dirb/common.txt --headers "Authorization: Bearer token" --user-agent "Mozilla/5.0" --threads 100
-```
-***
-**Using a larger wordlist**:
-To conduct a more thorough scan with a bigger wordlist, you can use the SecLists repository. Here's how:
-
-- Download SecLists:
+### **Using a larger wordlist**:
+You can use a larger wordlist from **SecLists** for more comprehensive scanning. To download SecLists:
    ```bash
    git clone https://github.com/danielmiessler/SecLists.git
    ```
 
-- Use the larger wordlist for scanning:
+Then use a larger wordlist like this:
    ```bash
    python3 PathFinder.py https://example.com /path/to/SecLists/Discovery/Web-Content/big.txt --threads 100
    ```
 
-This will use a larger wordlist (`big.txt`) from SecLists for a more comprehensive scan.
-***
 ### Wordlist Reference
 
-The default wordlist used in examples comes from the **DirBuster** wordlist collection, commonly available on Kali Linux systems under `/usr/share/wordlists/dirb/`.
+The default wordlist comes from **DirBuster**, typically found on Kali Linux under `/usr/share/wordlists/dirb/`. Alternatively, you can use wordlists from **SecLists**:
 
-For more extensive scans, use wordlists from the **SecLists** repository, which contains various discovery wordlists for web content:
 - **SecLists** repository: [https://github.com/danielmiessler/SecLists](https://github.com/danielmiessler/SecLists)
-***
-### Key Features
 
-- **Multithreading**: Supports concurrent requests for faster enumeration.
-- **Supports file extensions**: You can specify file extensions such as `.php`, `.html`, and more.
-***
-### Additional Notes
+## Features
 
-- You can adjust the number of threads for faster or slower scanning based on system resources.
-- Larger wordlists will take more time, but will be more thorough in finding hidden files and directories.
+- **Multithreading**: Scan multiple directories and files at once for faster results.
+- **Supports file extensions**: You can check for specific file extensions like `.php`, `.html`, and `.js`.
+- **Custom headers and user agents**: Add headers and user-agent strings for advanced use cases.
+
+### Notes
+
+- You can adjust the number of threads depending on your machine's resources.
+- Larger wordlists may take more time but can discover more hidden files and directories.
