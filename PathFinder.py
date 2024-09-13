@@ -2,6 +2,7 @@ import requests
 import argparse
 from threading import Thread, Lock
 import queue
+from tqdm import tqdm  # Import tqdm for progress bar
 import os
 
 print_lock = Lock()
@@ -31,42 +32,57 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
         if not wordlist:
             return
 
+    # Read the wordlist and count the total number of paths
+    paths = []
     with open(wordlist, 'r') as file:
         for line in file:
             path = line.strip()
             if extensions:
                 for ext in extensions:
-                    q.put(f"{path}.{ext}")
+                    paths.append(f"{path}.{ext}")
             else:
-                q.put(path)
+                paths.append(path)
+
+    total_paths = len(paths)  # Total number of paths to scan
+
+    # Add all paths to the queue
+    for path in paths:
+        q.put(path)
+
+    # Create a progress bar using tqdm
+    progress_bar = tqdm(total=total_paths, desc="Scanning Progress", ncols=100)
 
     def worker():
         while not q.empty():
             path = q.get()
             full_url = f"{url}/{path}"
             try:
-                response = requests.get(full_url, headers=headers)
+                response = requests.get(full_url, headers=headers, verify=False)
                 if response.status_code == 200:
                     with print_lock:
                         print(f"[+] Found: {full_url} (Status: 200)")
                 elif response.status_code == 403:
                     with print_lock:
                         print(f"[-] Forbidden: {full_url} (Status: 403)")
+                progress_bar.update(1)  # Update the progress bar
                 q.task_done()
             except requests.exceptions.RequestException as e:
                 with print_lock:
                     print(f"[!] Error: {full_url} - {e}")
+                progress_bar.update(1)  # Update the progress bar
 
+    # Start the threads
     for _ in range(threads):
         t = Thread(target=worker)
         t.daemon = True
         t.start()
 
     q.join()
+    progress_bar.close()  # Close the progress bar once the scanning is done
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Web Directory and File Enumerator with Extension Support")
-    parser.add_argument("url", help="Target URL (e.g., http://example.com)")  # Users input any domain here.
+    parser.add_argument("url", help="Target URL (e.g., http://example.com)")
     parser.add_argument("wordlist", help="Path to the wordlist file or download from GitHub if not found")
     parser.add_argument("--extensions", "-e", nargs='*', help="File extensions to append (e.g., php, html, js)")
     parser.add_argument("--threads", type=int, default=10, help="Number of threads (default: 10)")
