@@ -15,6 +15,7 @@ print_lock = Lock()
 found_endpoints_200 = set()
 found_endpoints_403 = set()
 
+# Initial dir checks before wordlist
 popular_dirs = [
     'about', 'about-us', 'services', 'contact', 'home', 'products', 'blog', 'login', 'admin', 'dashboard',
     'account', 'help', 'faq', 'privacy', 'terms', 'tos', 'careers', 'jobs', 'support', 'signup', 'register',
@@ -84,7 +85,7 @@ def scan_url(url, wordlist, extensions=None, headers=None, user_agent=None, thre
         q.put(path)
 
     total_paths = len(popular_dirs) + len(paths)
-    progress_bar = tqdm(total=total_paths, desc="Scan", ncols=70, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
+    progress_bar = tqdm(total=total_paths, desc="Scanning", ncols=70, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}')
 
     def worker():
         while not q.empty():
